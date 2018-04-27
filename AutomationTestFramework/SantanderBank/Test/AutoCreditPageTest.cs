@@ -1,5 +1,4 @@
 ﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using OpenQA.Selenium;
 using NUnit.Framework;
 using OpenQA.Selenium.Chrome;
@@ -8,25 +7,36 @@ using AutomationTestFramework.SantanderBank.Pages;
 
 namespace AutomationTestFramework.SantanderBank.Test
 {
-    
+    [TestFixture]
     public class AutoCreditPageTest
     {
         IWebDriver driver;
         AutoCreditPage autoPage;
 
-        [SetUp]
-        public void Initiliaze()
+        [OneTimeSetUp]
+        public void Init()
         {
             driver = new ChromeDriver();
             autoPage = new AutoCreditPage(driver);
+        }
+
+        [SetUp]
+        public void Initiliaze()
+        {
             autoPage.Open();
         }
 
         [TearDown]
         public void EndTest()
         {
-            Thread.Sleep(1000);
+
+        }
+
+        [OneTimeTearDown]
+        public void CleanUp()
+        {
             driver.Close();
+            driver.Quit();
         }
 
         [Test]
@@ -36,11 +46,40 @@ namespace AutomationTestFramework.SantanderBank.Test
             autoPage.Open();
         }
 
-        [Test]
-        public void MovePriceSliderTest()
+        [TestCase(0, ExpectedResult =50000)]
+        [TestCase(50, ExpectedResult = 1030000)]
+        [TestCase(100, ExpectedResult = 2000000)]
+        public int MovePriceSliderTest(int percentage)
         {
+            autoPage.MovePriceLoanSlider(percentage);
+            return autoPage.PriceLoan;
+        }
 
-            autoPage.MovePriceSlider(50);
+        [Test]
+        public void checkSelectedLoanTypeRadioButton()
+        {
+            Assert.IsTrue(autoPage.isCheckedCarRadioButton());
+        }
+
+        [TestCase(250000, 200000, ExpectedResult = 201000)]
+        [TestCase(1030000, 75000, ExpectedResult = 76000)]
+        [TestCase(250000, 250000, ExpectedResult = 250000)]
+        public int MoveOwnCapitalSlider(int loan, int own)
+        {
+            autoPage.PriceLoan = loan;
+            autoPage.MoveOwnCapitalSlider(own);
+            return autoPage.OwnCapital;
+        }
+
+        [TestCase(0, ExpectedResult = 4.9)]
+        [TestCase(19999, ExpectedResult = 4.9)]
+        [TestCase(20000, ExpectedResult = 4.45)]
+        [TestCase(34999, ExpectedResult = 4.45)]
+        [TestCase(35000, ExpectedResult = 3.9)]
+        public double CheckRate(int own)
+        {
+            autoPage.OwnCapital = own;
+            return autoPage.NominalPersentRate;
         }
 
 
